@@ -4,6 +4,7 @@
  "name": "Test",
  "fields": [
      {"name": "id", "type": "string"},
-     {"name": "test", "type": "double"}
+     {"name": "test", "type": "double"},
+     {"name": "boom", "type": "double", "default":  0.0}
  ]
 }

@@ -1,8 +1,6 @@
 package com.galiglobal.examples.confluentavro;
 
 import com.galiglobal.examples.testavro.Test;
-import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -11,9 +9,9 @@ import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.Properties;
 
-public class ConfluentProducerExample {
+public class AvroEmbeddedProducerExample {
 
-    private static final String TOPIC = "test";
+    private static final String TOPIC = "test2";
     private static final Properties props = new Properties();
 
     public static void main(final String[] args) {
@@ -22,8 +20,7 @@ public class ConfluentProducerExample {
         props.put(ProducerConfig.ACKS_CONFIG, "all");
         props.put(ProducerConfig.RETRIES_CONFIG, 0);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
-        props.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, "http://localhost:8081");
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, AvroEmbeddedSerializer.class);
 
         try (KafkaProducer<String, Test> producer = new KafkaProducer<>(props)) {
 
