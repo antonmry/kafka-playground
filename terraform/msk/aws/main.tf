@@ -29,7 +29,7 @@ variable "ami_id" {
 }
 
 variable "instance_type" {
-  default = "t2.micro"
+  default = "t2.medium"
 }
 
 # Network
@@ -212,11 +212,11 @@ resource "aws_cloudwatch_log_group" "test" {
   name = "msk_broker_logs"
 }
 
-# resource "aws_s3_bucket" "bucket" {
-#   bucket = "antonmry-msk-broker-logs-bucket"
-#   acl    = "private"
-#   force_destroy = true
-# }
+resource "aws_s3_bucket" "bucket" {
+  bucket = "poc-msk-broker-logs-bucket"
+  acl    = "private"
+  force_destroy = true
+}
 
 resource "aws_iam_role" "firehose_role" {
   name = "firehose_test_role"
@@ -238,25 +238,25 @@ resource "aws_iam_role" "firehose_role" {
 EOF
 }
 
-// resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
-//   name        = "terraform-kinesis-firehose-msk-broker-logs-stream"
-//   destination = "s3"
-// 
-//   s3_configuration {
-//     role_arn   = aws_iam_role.firehose_role.arn
-//     bucket_arn = aws_s3_bucket.bucket.arn
-//   }
-// 
-//   tags = {
-//     LogDeliveryEnabled = "placeholder"
-//   }
-// 
-//   lifecycle {
-//     ignore_changes = [
-//       tags["LogDeliveryEnabled"],
-//     ]
-//   }
-// }
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  name        = "terraform-kinesis-firehose-msk-broker-logs-stream"
+  destination = "s3"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose_role.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  tags = {
+    LogDeliveryEnabled = "placeholder"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      tags["LogDeliveryEnabled"],
+    ]
+  }
+}
 
 resource "aws_msk_cluster" "example" {
   cluster_name           = "example"
@@ -295,15 +295,15 @@ resource "aws_msk_cluster" "example" {
         enabled   = true
         log_group = aws_cloudwatch_log_group.test.name
       }
-//      firehose {
-//        enabled         = true
-//        delivery_stream = aws_kinesis_firehose_delivery_stream.test_stream.name
-//      }
-//      s3 {
-//        enabled = true
-//        bucket  = aws_s3_bucket.bucket.id
-//        prefix  = "logs/msk-"
-//      }
+      firehose {
+        enabled         = true
+        delivery_stream = aws_kinesis_firehose_delivery_stream.test_stream.name
+      }
+      s3 {
+        enabled = true
+        bucket  = aws_s3_bucket.bucket.id
+        prefix  = "logs/msk-"
+      }
     }
   }
 
@@ -314,10 +314,15 @@ resource "aws_msk_cluster" "example" {
 
 # Prometheus
 
-// ssh-keygen -f test-key
 resource "aws_key_pair" "test" {
   key_name   = "test"
   public_key = file("test-key.pub")
+}
+
+locals {
+  server1 = element([for s in split(",", aws_msk_cluster.example.bootstrap_brokers_tls) : split(":", s)[0] if s != ""], 0)
+  server2 = element([for s in split(",", aws_msk_cluster.example.bootstrap_brokers_tls) : split(":", s)[0] if s != ""], 0)
+  server3 = element([for s in split(",", aws_msk_cluster.example.bootstrap_brokers_tls) : split(":", s)[0] if s != ""], 0)
 }
 
 resource "aws_instance" "public-ec2" {
@@ -333,16 +338,57 @@ resource "aws_instance" "public-ec2" {
     }
 
     depends_on = [ aws_vpc.vpc ]
+
+    provisioner "file" {
+        source      = "prometheus.yml"
+        destination = "prometheus.yml"
+      }
+
+    provisioner "file" {
+        source      = "targets.json"
+        destination = "targets.json"
+    }
+
+    provisioner "remote-exec" {
+      inline = [
+        "wget https://github.com/prometheus/prometheus/releases/download/v2.25.2/prometheus-2.25.2.linux-amd64.tar.gz",
+        "tar -zxvf prometheus-2.25.2.linux-amd64.tar.gz",
+        "mv prometheus.yml prometheus-2.25.2.linux-amd64",
+        "mv targets.json prometheus-2.25.2.linux-amd64",
+        "cd prometheus-2.25.2.linux-amd64",
+        "sed -i 's/server1/${local.server1}/' targets.json",
+        "sed -i 's/server2/${local.server2}/' targets.json",
+        "sed -i 's/server3/${local.server3}/' targets.json",
+        "nohup ./prometheus &"
+      ]
+    }
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("test-key.pem")
+      host        = self.public_dns
+    }
 }
 
-// wget https://github.com/prometheus/prometheus/releases/download/v2.25.2/prometheus-2.25.2.linux-amd64.tar.gz
-// tar -zxvf prometheus-2.25.2.linux-amd64.tar.gz
-// cd prometheus-2.25.2.linux-amd64/
-// prometheus.yml
-// targets.json
+// TODO
+//
+// Configure Prometheus for New Relic
 
+// TODO
+
+// ssh-keygen -f test-key
 // ssh -i test-key.pem -L 9090:localhost:9090  ubuntu@ec2-54-78-224-105.eu-west-1.compute.amazonaws.com
 // docker run -d -p 3000:3000 grafana/grafana
+// http://localhost:9090/api/v1/label/__name__/values
+
+// sudo apt install openjdk-11-jre-headless
+// wget https://downloads.apache.org/kafka/2.7.0/kafka_2.12-2.7.0.tgz
+// tar -zxvf kafka_2.12-2.7.0.tgz
+// cd kafka_2.12-2.7.0/bin
+// KAFKA_HEAP_OPTS="-Xmx1024M"
+// cp /usr/lib/jvm/java-11-openjdk-amd64/lib/security/cacerts /tmp/kafka.client.truststore.jks
+# ./kafka-topics.sh --create --partitions 6 --replication-factor 3 --topic demo-topic --bootstrap-server b-1.example.xhxodl.c5.kafka.eu-west-1.amazonaws.com:9094,b-2.example.xhxodl.c5.kafka.eu-west-1.amazonaws.com:9094,b-3.example.xhxodl.c5.kafka.eu-west-1.amazonaws.com:9094 --command-config client.properties
 
 
 # Outputs

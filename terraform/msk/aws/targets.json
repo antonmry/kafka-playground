@@ -4,9 +4,9 @@
       "job": "jmx"
     },
     "targets": [
-      "b-1.example.bjge23.c5.kafka.eu-west-1.amazonaws.com:11001",
-      "b-2.example.bjge23.c5.kafka.eu-west-1.amazonaws.com:11001",
-      "b-3.example.bjge23.c5.kafka.eu-west-1.amazonaws.com:11001"
+      "server1:11001",
+      "server2:11001",
+      "server3:11001"
     ]
   },
   {
@@ -14,9 +14,9 @@
       "job": "node"
     },
     "targets": [
-      "b-1.example.bjge23.c5.kafka.eu-west-1.amazonaws.com:11001",
-      "b-2.example.bjge23.c5.kafka.eu-west-1.amazonaws.com:11002",
-      "b-3.example.bjge23.c5.kafka.eu-west-1.amazonaws.com:11003"
+      "server1:11001",
+      "server2:11002",
+      "server3:11003"
     ]
   }
 ]
