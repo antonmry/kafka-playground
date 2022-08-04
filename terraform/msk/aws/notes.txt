@@ -1,0 +1,23 @@
+
+// TODO
+
+// Configure Prometheus for New Relic
+
+// TODO
+
+ssh-keygen -f test-key
+ssh -i test-key.pem -L 9090:localhost:9090  ubuntu@ec2-54-78-224-105.eu-west-1.compute.amazonaws.com
+docker run -d -p 3000:3000 grafana/grafana
+
+http://localhost:9090/api/v1/label/__name__/values
+
+sudo apt install openjdk-11-jre-headless
+wget https://downloads.apache.org/kafka/2.7.0/kafka_2.12-2.7.0.tgz
+tar -zxvf kafka_2.12-2.7.0.tgz
+cd kafka_2.12-2.7.0/bin
+KAFKA_HEAP_OPTS="-Xmx1024M"
+cp /usr/lib/jvm/java-11-openjdk-amd64/lib/security/cacerts /tmp/kafka.client.truststore.jks
+./kafka-topics.sh --create --partitions 6 --replication-factor 3 --topic demo-topic --bootstrap-server  b-1.example.3qs2yq.c5.kafka.eu-west-1.amazonaws.com:9094,b-2.example.3qs2yq.c5.kafka.eu-west-1.amazonaws.com:9094,b-3.example.3qs2yq.c5.kafka.eu-west-1.amazonaws.com:9094 --command-config client.properties
+
+./kafka-topics.sh --create --partitions 6 --replication-factor 3 --topic demo-topic --bootstrap-server  b-1.example.3qs2yq.c5.kafka.eu-west-1.amazonaws.com:9094,b-2.example.3qs2yq.c5.kafka.eu-west-1.amazonaws.com:9094,b-3.example.3qs2yq.c5.kafka.eu-west-1.amazonaws.com:9094 --command-config client.properties
+

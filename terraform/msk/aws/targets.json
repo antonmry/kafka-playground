@@ -1,0 +1,22 @@
+[
+  {
+    "labels": {
+      "job": "jmx"
+    },
+    "targets": [
+      "server1:11001",
+      "server2:11001",
+      "server3:11001"
+    ]
+  },
+  {
+    "labels": {
+      "job": "node"
+    },
+    "targets": [
+      "server1:11001",
+      "server2:11002",
+      "server3:11003"
+    ]
+  }
+]
