@@ -16,6 +16,10 @@
 package io.confluent.examples.clients.cloud;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.OpenTelemetrySdkBuilder;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -33,6 +37,7 @@ import io.confluent.examples.clients.cloud.model.DataRecord;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.kafka.common.errors.TopicExistsException;
@@ -81,6 +86,8 @@ public class ProducerExample {
         props.put(ProducerConfig.ACKS_CONFIG, "all");
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaJsonSerializer");
+        props.put(ProducerConfig.CLIENT_ID_CONFIG, "producer1");
+        props.put(ProducerConfig.LINGER_MS_CONFIG, 1000);
 
         KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
         props.putAll(kafkaTelemetry.metricConfigProperties());
@@ -88,29 +95,34 @@ public class ProducerExample {
         Producer<String, DataRecord> producer = new KafkaProducer<String, DataRecord>(props);
 
         // Produce sample data
-        final Long numMessages = 1_0L;
-        for (Long i = 0L; i < numMessages; i++) {
-            String key = "alice";
-            DataRecord record = new DataRecord(i);
+        final Long numMessages = 100L;
+        try {
+            for (Long i = 0L; i < numMessages; i++) {
+            //while (true) {
 
-            System.out.printf("Producing record: %s\t%s%n", key, record);
-            producer.send(new ProducerRecord<String, DataRecord>(topic, key, record), new Callback() {
-                @Override
-                public void onCompletion(RecordMetadata m, Exception e) {
-                    if (e != null) {
-                        e.printStackTrace();
-                    } else {
-                        System.out.printf("Produced record to topic %s partition [%d] @ offset %d%n", m.topic(), m.partition(), m.offset());
+                String key = "alice";
+                DataRecord record = new DataRecord(new Random().nextLong());
+
+                System.out.printf("Producing record: %s\t%s%n", key, record);
+                producer.send(new ProducerRecord<String, DataRecord>(topic, key, record), new Callback() {
+                    @Override
+                    public void onCompletion(RecordMetadata m, Exception e) {
+                        if (e != null) {
+                            e.printStackTrace();
+                        } else {
+                            System.out.printf("Produced record to topic %s partition [%d] @ offset %d%n", m.topic(), m.partition(), m.offset());
+                        }
                     }
-                }
-            });
+                });
+
+                Thread.sleep(200);
+            }
+        } catch (InterruptedException e) {
+            // Do nothing
+        } finally {
+            producer.flush();
+            producer.close();
         }
-
-        producer.flush();
-
-        System.out.printf("10 messages were produced to topic %s%n", topic);
-
-        producer.close();
     }
 
     public static Properties loadConfig(final String configFile) throws IOException {
