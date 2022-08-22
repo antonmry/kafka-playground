@@ -1,9 +1,0 @@
-{
- "namespace": "com.galiglobal.examples.testavro",
- "type": "record",
- "name": "Test",
- "fields": [
-     {"name": "id", "type": "string"},
-     {"name": "test", "type": "double"}
- ]
-}
