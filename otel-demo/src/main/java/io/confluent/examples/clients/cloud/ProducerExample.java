@@ -90,7 +90,7 @@ public class ProducerExample {
         Producer<String, DataRecord> producer = new KafkaProducer<String, DataRecord>(props);
 
         // Produce sample data
-        final Long numMessages = 100L;
+        final Long numMessages = Long.MAX_VALUE;
         try {
             for (Long i = 0L; i < numMessages; i++) {
 
