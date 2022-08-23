@@ -71,6 +71,20 @@ In the UI, you should be able to see the Kafka distributed traces:
 See [Understand and use the distributed tracing UI] for more information about
 Distributed Tracing in New Relic.
 
+# Sampling
+
+Traces can be quite costly in high-throughput pipelines. It's possible to
+configure sampling to avoid a big part of that cost with the following
+environment variables:
+
+```sh
+export OTEL_TRACES_SAMPLER=parentbased_traceidratio
+export OTEL_TRACES_SAMPLER_ARG=0.3
+```
+
+See [Sampler] for more info.
+
+
 # Kafka Client metrics
 
 Distributed traces are ideal to identify bottlenecks but they aren't so useful
@@ -117,3 +131,4 @@ See [Instrumenting Kafka clients with OpenTelemetry] for more info.
 [NewRelic OpenTelemetry setup]: https://docs.newrelic.com/docs/more-integrations/open-source-telemetry-integrations/opentelemetry/opentelemetry-setup/
 [Understand and use the distributed tracing UI]: https://docs.newrelic.com/docs/distributed-tracing/ui-data/understand-use-distributed-tracing-ui/
 [Instrumenting Kafka clients with OpenTelemetry]: https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/instrumentation/kafka/kafka-clients/README.md
+[Sampler]: https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#sampler
