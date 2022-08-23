@@ -16,11 +16,6 @@
 package io.confluent.examples.clients.cloud;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.OpenTelemetrySdkBuilder;
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -98,7 +93,6 @@ public class ProducerExample {
         final Long numMessages = 100L;
         try {
             for (Long i = 0L; i < numMessages; i++) {
-            //while (true) {
 
                 String key = "alice";
                 DataRecord record = new DataRecord(new Random().nextLong());
