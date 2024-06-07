@@ -38,3 +38,8 @@ tasks.named('test') {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
 }
+jar {
+    archiveBaseName.set('demo-kip714')
+    archiveVersion.set('0.1.0')
+    archiveExtension.set('jar')
+}
